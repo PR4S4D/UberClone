@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Uber Clone</string>
-
+    <string name="title_activity_maps">Rider</string>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyAXfmjURGTbu-UxQ6Pg2wpod6QKutuZXVs</string>
 </resources>

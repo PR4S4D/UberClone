@@ -119,7 +119,9 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                 user.updateProfile(profileUpdates);
             }
 
-            Toast.makeText(this, " Welcome " + userName, Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this,RiderActivity.class));
+
+            Toast.makeText(this, " Welcome " + user.getDisplayName(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -132,7 +134,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     protected void onStart() {
         super.onStart();
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        updateUI(null);
+        updateUI(currentUser);
     }
 
 }
