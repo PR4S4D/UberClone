@@ -28,12 +28,21 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.slp.com.uberclone.data.User;
 
 import java.io.IOException;
 import java.util.List;
 
 public class RiderActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnSuccessListener<Location>, OnFailureListener {
 
+    private static final String TAG = "RiderActivity:";
     private GoogleMap mMap;
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
@@ -52,7 +61,6 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
             checkPermissions(this);
         }
         buildGoogleApi();
-
     }
 
     private void buildGoogleApi() {
@@ -164,4 +172,6 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         }
        return null != fromLocation ? fromLocation.get(0).getAddressLine(0) : "Your location";
     }
+
+
 }

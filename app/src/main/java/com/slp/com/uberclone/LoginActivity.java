@@ -23,6 +23,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.slp.com.uberclone.data.User;
 
 import java.net.Authenticator;
 
@@ -38,6 +41,10 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     GoogleApiClient googleApiClient;
     private FirebaseAuth firebaseAuth;
     private String userName;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference userDatabaseReference;
+    public static final String USER = "user";
+    FirebaseUser user;
 
 
     @Override
@@ -58,6 +65,8 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                 .build();
 
         firebaseAuth = FirebaseAuth.getInstance();
+        firebaseDatabase = FirebaseDatabase.getInstance();
+
     }
 
 
@@ -99,30 +108,34 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                     if (task.isSuccessful()) {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d(TAG, "signInWithCredential:success");
-                        FirebaseUser user = firebaseAuth.getCurrentUser();
+                        user = firebaseAuth.getCurrentUser();
+                        createUser();
                         updateUI(user);
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "signInWithCredential:failure", task.getException());
                         Toast.makeText(LoginActivity.this, "Authentication failed.",
                                 Toast.LENGTH_SHORT).show();
-                        updateUI(null);
                     }
                 });
     }
 
+    private void createUser() {
+        userDatabaseReference = firebaseDatabase.getReference().child(
+                USER);
+        userDatabaseReference.child(user.getUid()).setValue(getUser());
+    }
+
     private void updateUI(FirebaseUser user) {
-        if (null != user) {
-            if( null == user.getDisplayName()){
-                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                        .setDisplayName(userName).build();
-                user.updateProfile(profileUpdates);
-            }
-
-            startActivity(new Intent(this,RiderActivity.class));
-
-            Toast.makeText(this, " Welcome " + user.getDisplayName(), Toast.LENGTH_LONG).show();
+        if (null == user.getDisplayName()) {
+            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                    .setDisplayName(userName).build();
+            user.updateProfile(profileUpdates);
         }
+
+        startActivity(new Intent(this, RiderActivity.class));
+
+        Toast.makeText(this, " Welcome " + user.getDisplayName(), Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -134,7 +147,12 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     protected void onStart() {
         super.onStart();
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        updateUI(currentUser);
+        if (null != currentUser) {
+            updateUI(currentUser);
+        }
     }
 
+    private User getUser() {
+        return new User(user.getDisplayName(), false, user.getEmail());
+    }
 }
