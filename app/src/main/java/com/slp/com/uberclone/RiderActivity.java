@@ -28,14 +28,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.slp.com.uberclone.data.User;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,6 +41,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     private static final int LOCATION_ACCESS = 12;
     private LatLng currentLatLng;
     SupportMapFragment mapFragment;
+    private boolean isLocationSet = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +52,12 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
         if (!isLocationAccessGranted(this)) {
             checkPermissions(this);
+        } else{
+            buildGoogleApi();
+
         }
-        buildGoogleApi();
     }
+
 
     private void buildGoogleApi() {
         googleApiClient = new GoogleApiClient.Builder(this)
@@ -103,6 +99,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
             mMap.addMarker(new MarkerOptions().position(currentLatLng).title(getAddress()));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+            isLocationSet = true;
         }
     }
 
@@ -154,6 +151,10 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         Toast.makeText(this, "on success", Toast.LENGTH_SHORT).show();
         mapFragment.getMapAsync(this);
         currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+        if(!isLocationSet){
+            setCurrentLocationOnMap();
+        }
+
     }
 
     @Override
@@ -162,7 +163,6 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     }
 
     private String getAddress() {
-
         Geocoder geocoder = new Geocoder(this);
         List<Address> fromLocation = null;
         try {
@@ -173,5 +173,11 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
        return null != fromLocation ? fromLocation.get(0).getAddressLine(0) : "Your location";
     }
 
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if(isLocationAccessGranted(this)){
+            buildGoogleApi();
+            accessLocation();
+        }
+    }
 }
