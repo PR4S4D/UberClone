@@ -96,6 +96,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
 
     private void setCurrentLocationOnMap() {
         if (null != currentLatLng) {
+            mMap.clear();
             mMap.addMarker(new MarkerOptions().position(currentLatLng).title(getAddress()));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
