@@ -55,6 +55,8 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     private boolean isLocationSet = false;
     @BindView(R.id.request_ride)
     FloatingActionButton requestRideFAB;
+    private boolean rideBooked = false;
+    private String requestKey = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +68,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
         if (!isLocationAccessGranted(this)) {
             checkPermissions(this);
-        } else{
+        } else {
             buildGoogleApi();
 
         }
@@ -80,6 +82,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
                 .build();
 
     }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -167,10 +170,9 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         Toast.makeText(this, "on success", Toast.LENGTH_SHORT).show();
         mapFragment.getMapAsync(this);
         currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-        if(!isLocationSet){
+        if (!isLocationSet) {
             setCurrentLocationOnMap();
         }
-
 
 
     }
@@ -179,6 +181,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     public void onFailure(@NonNull Exception e) {
         Toast.makeText(this, "on failed", Toast.LENGTH_SHORT).show();
     }
+
     @Deprecated
     private String getAddress() {
         Geocoder geocoder = new Geocoder(this);
@@ -188,10 +191,10 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         } catch (IOException e) {
             e.printStackTrace();
         }
-       return null != addresses ? addresses.get(0).getAddressLine(0) : "Your location";
+        return null != addresses ? addresses.get(0).getAddressLine(0) : "Your location";
     }
 
-    private Address getCurrentAddress(){
+    private Address getCurrentAddress() {
         Geocoder geocoder = new Geocoder(this);
         List<Address> addresses = null;
         try {
@@ -204,18 +207,32 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(isLocationAccessGranted(this)){
+        if (isLocationAccessGranted(this)) {
             buildGoogleApi();
             accessLocation();
         }
     }
 
     public void bookRide(View view) {
-        //TODO get destination location
-        Snackbar.make(view,"Searching for nearest Uber!",Snackbar.LENGTH_SHORT).show();
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         DatabaseReference databaseReference = firebaseDatabase.getReference().child("request");
-        RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(),currentLatLng,null);
-        databaseReference.push().setValue(rideRequest);
+        RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(), currentLatLng, null);
+        if (!rideBooked) {
+            //TODO get destination location
+            Snackbar.make(view, "Searching for nearest Uber!", Snackbar.LENGTH_SHORT).show();
+            databaseReference.child(FirebaseUtils.getUserUid()).setValue(rideRequest);
+            rideBooked = true;
+            requestRideFAB.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+        } else {
+            DatabaseReference request = databaseReference.child(FirebaseUtils.getUserUid());
+            Snackbar.make(view, "Cancelling your Uber!", Snackbar.LENGTH_SHORT).show();
+            request.removeValue();
+            requestRideFAB.setImageResource(R.drawable.ic_car);
+        }
+
     }
 }
+
+
+
+
