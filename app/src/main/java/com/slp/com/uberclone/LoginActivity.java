@@ -26,6 +26,7 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.slp.com.uberclone.data.User;
+import com.slp.com.uberclone.utils.FirebaseUtils;
 
 import java.net.Authenticator;
 
@@ -123,7 +124,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     private void createUser() {
         userDatabaseReference = firebaseDatabase.getReference().child(
                 USER);
-        userDatabaseReference.child(user.getUid()).setValue(getUser());
+        userDatabaseReference.child(user.getUid()).setValue(FirebaseUtils.getUser());
     }
 
     private void updateUI(FirebaseUser user) {
@@ -150,9 +151,5 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         if (null != currentUser) {
             updateUI(currentUser);
         }
-    }
-
-    private User getUser() {
-        return new User(user.getDisplayName(), false, user.getEmail());
     }
 }

@@ -9,6 +9,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -30,9 +31,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.slp.com.uberclone.data.RideRequest;
+import com.slp.com.uberclone.utils.FirebaseUtils;
 
 import java.io.IOException;
 import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class RiderActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnSuccessListener<Location>, OnFailureListener {
 
@@ -44,11 +53,14 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     private LatLng currentLatLng;
     SupportMapFragment mapFragment;
     private boolean isLocationSet = false;
+    @BindView(R.id.request_ride)
+    FloatingActionButton requestRideFAB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rider);
+        ButterKnife.bind(this);
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -99,10 +111,11 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     private void setCurrentLocationOnMap() {
         if (null != currentLatLng) {
             mMap.clear();
-            mMap.addMarker(new MarkerOptions().position(currentLatLng).title(getAddress()));
+            mMap.addMarker(new MarkerOptions().position(currentLatLng).title(FirebaseUtils.getFirebaseUser().getDisplayName()));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
             isLocationSet = true;
+            requestRideFAB.setVisibility(View.VISIBLE);
         }
     }
 
@@ -158,22 +171,35 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
             setCurrentLocationOnMap();
         }
 
+
+
     }
 
     @Override
     public void onFailure(@NonNull Exception e) {
         Toast.makeText(this, "on failed", Toast.LENGTH_SHORT).show();
     }
-
+    @Deprecated
     private String getAddress() {
         Geocoder geocoder = new Geocoder(this);
-        List<Address> fromLocation = null;
+        List<Address> addresses = null;
         try {
-            fromLocation = geocoder.getFromLocation(currentLatLng.latitude, currentLatLng.longitude, 1);
+            addresses = geocoder.getFromLocation(currentLatLng.latitude, currentLatLng.longitude, 1);
         } catch (IOException e) {
             e.printStackTrace();
         }
-       return null != fromLocation ? fromLocation.get(0).getAddressLine(0) : "Your location";
+       return null != addresses ? addresses.get(0).getAddressLine(0) : "Your location";
+    }
+
+    private Address getCurrentAddress(){
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocation(currentLatLng.latitude, currentLatLng.longitude, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null != addresses ? addresses.get(0) : null;
     }
 
     @Override
@@ -185,6 +211,11 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     }
 
     public void bookRide(View view) {
-        Snackbar.make(view,"Ubering!",Snackbar.LENGTH_SHORT).show();
+        //TODO get destination location
+        Snackbar.make(view,"Searching for nearest Uber!",Snackbar.LENGTH_SHORT).show();
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        DatabaseReference databaseReference = firebaseDatabase.getReference().child("request");
+        RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(),currentLatLng,null);
+        databaseReference.push().setValue(rideRequest);
     }
 }

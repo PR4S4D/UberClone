@@ -12,12 +12,14 @@
         tools:context="com.slp.com.uberclone.RiderActivity" />
 
     <android.support.design.widget.FloatingActionButton
+        android:id="@+id/request_ride"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
         android:layout_margin="16dp"
         android:clickable="true"
         android:src="@drawable/ic_car"
+        android:visibility="visible"
         android:tint="@android:color/white"
         android:onClick="bookRide"/>
 
