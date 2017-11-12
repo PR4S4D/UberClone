@@ -18,6 +18,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -62,12 +63,16 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     private LocationRequest locationRequest;
     private static final int LOCATION_ACCESS = 12;
     private LatLng currentLatLng;
+    private LatLng destinationLatLng;
     SupportMapFragment mapFragment;
     private boolean isLocationSet = false;
     @BindView(R.id.request_ride)
     FloatingActionButton requestRideFAB;
+    @BindView(R.id.destination_tv)
+    TextView destinationTV;
     private boolean rideBooked = false;
     private int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,9 +152,9 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
 
     @SuppressLint("MissingPermission")
     private void accessLocation() {
-        Log.i("onConnected: ", "connected");
+        Toast.makeText(this, "Accessing Location!", Toast.LENGTH_SHORT).show();
         locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(1000);
         Task<Location> newLocation = LocationServices.getFusedLocationProviderClient(this).getLastLocation();
         newLocation.addOnSuccessListener(this);
@@ -229,9 +234,9 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     public void bookRide(View view) {
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         DatabaseReference databaseReference = firebaseDatabase.getReference().child("request");
-        RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(), currentLatLng, null);
         if (!rideBooked) {
-            //TODO get destination location
+            Log.i(TAG, "bookRide: "+destinationLatLng);
+            RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(), currentLatLng, destinationLatLng);
             Snackbar.make(view, "Searching for nearest Uber!", Snackbar.LENGTH_SHORT).show();
             databaseReference.child(FirebaseUtils.getUserUid()).setValue(rideRequest);
             rideBooked = true;
@@ -241,6 +246,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
             Snackbar.make(view, "Cancelling your Uber!", Snackbar.LENGTH_SHORT).show();
             request.removeValue();
             requestRideFAB.setImageResource(R.drawable.ic_car);
+            rideBooked = false;
         }
 
     }
@@ -293,6 +299,8 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(this, data);
+                destinationLatLng = place.getLatLng();
+                destinationTV.setText(place.getName());
                 Log.i(TAG, "Place: " + place.getName());
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
