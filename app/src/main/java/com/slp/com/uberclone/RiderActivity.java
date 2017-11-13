@@ -238,6 +238,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         if (!rideBooked) {
             if(!destinationSelected){
                 selectDestination();
+                return;
             }
             Log.i(TAG, "bookRide: "+destinationLatLng);
             RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(), currentLatLng, destinationLatLng);
@@ -305,6 +306,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
                 Place place = PlaceAutocomplete.getPlace(this, data);
                 destinationLatLng = place.getLatLng();
                 destinationTV.setText(place.getName());
+                destinationSelected = true;
                 Log.i(TAG, "Place: " + place.getName());
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
