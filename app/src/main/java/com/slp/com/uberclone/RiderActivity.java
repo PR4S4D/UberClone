@@ -72,6 +72,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     TextView destinationTV;
     private boolean rideBooked = false;
     private int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+    private boolean destinationSelected = false;
 
 
     @Override
@@ -235,6 +236,9 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         DatabaseReference databaseReference = firebaseDatabase.getReference().child("request");
         if (!rideBooked) {
+            if(!destinationSelected){
+                selectDestination();
+            }
             Log.i(TAG, "bookRide: "+destinationLatLng);
             RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(), currentLatLng, destinationLatLng);
             Snackbar.make(view, "Searching for nearest Uber!", Snackbar.LENGTH_SHORT).show();
