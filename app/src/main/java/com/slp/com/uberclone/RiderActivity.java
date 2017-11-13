@@ -2,11 +2,13 @@ package com.slp.com.uberclone;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -55,12 +57,15 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static android.location.LocationManager.GPS_PROVIDER;
+
 public class RiderActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnSuccessListener<Location>, OnFailureListener {
 
     private static final String TAG = "RiderActivity:";
     private GoogleMap mMap;
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
+    private LocationManager locationManager;
     private static final int LOCATION_ACCESS = 12;
     private LatLng currentLatLng;
     private LatLng destinationLatLng;
@@ -71,8 +76,10 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     @BindView(R.id.destination_tv)
     TextView destinationTV;
     private boolean rideBooked = false;
-    private int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+    private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+    private static final int LOCATION_SERVICE_REQUEST_CODE = 10;
     private boolean destinationSelected = false;
+    private boolean gpsEnabled = false;
 
 
     @Override
@@ -80,6 +87,18 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rider);
         ButterKnife.bind(this);
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        if (gpsEnabled || locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            setMapAndLocation();
+        } else {
+            Intent gpsOptionsIntent = new Intent(
+                    android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivityForResult(gpsOptionsIntent, LOCATION_SERVICE_REQUEST_CODE);
+        }
+
+    }
+
+    private void setMapAndLocation() {
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -89,7 +108,6 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
             buildGoogleApi();
 
         }
-
     }
 
 
@@ -103,6 +121,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
 
     @Override
     protected void onStart() {
+
         super.onStart();
         if (null != googleApiClient) {
             googleApiClient.connect();
@@ -117,6 +136,13 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         }
     }
 
+    @Override
+    protected void onResume() {
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            gpsEnabled = true;
+        }
+        super.onResume();
+    }
 
     @SuppressLint("MissingPermission")
     @Override
@@ -236,11 +262,11 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         DatabaseReference databaseReference = firebaseDatabase.getReference().child("request");
         if (!rideBooked) {
-            if(!destinationSelected){
+            if (!destinationSelected) {
                 selectDestination();
                 return;
             }
-            Log.i(TAG, "bookRide: "+destinationLatLng);
+            Log.i(TAG, "bookRide: " + destinationLatLng);
             RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(), currentLatLng, destinationLatLng);
             Snackbar.make(view, "Searching for nearest Uber!", Snackbar.LENGTH_SHORT).show();
             databaseReference.child(FirebaseUtils.getUserUid()).setValue(rideRequest);
@@ -301,22 +327,36 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                Place place = PlaceAutocomplete.getPlace(this, data);
-                destinationLatLng = place.getLatLng();
-                destinationTV.setText(place.getName());
-                destinationSelected = true;
-                Log.i(TAG, "Place: " + place.getName());
-            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
-                Status status = PlaceAutocomplete.getStatus(this, data);
 
-                Log.i(TAG, status.getStatusMessage());
+        switch (requestCode) {
+            case PLACE_AUTOCOMPLETE_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    Place place = PlaceAutocomplete.getPlace(this, data);
+                    destinationLatLng = place.getLatLng();
+                    destinationTV.setText(place.getName());
+                    destinationSelected = true;
+                    Log.i(TAG, "Place: " + place.getName());
+                } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
+                    Status status = PlaceAutocomplete.getStatus(this, data);
 
-            } else if (resultCode == RESULT_CANCELED) {
-                // The user canceled the operation.
-            }
+                    Log.i(TAG, status.getStatusMessage());
+
+                } else if (resultCode == RESULT_CANCELED) {
+                    // The user canceled the operation.
+
+                    break;
+                }
+
+            case LOCATION_SERVICE_REQUEST_CODE:
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    setMapAndLocation();
+                } else{
+                    Toast.makeText(this,"Enable GPS",Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
         }
+
     }
 
 
