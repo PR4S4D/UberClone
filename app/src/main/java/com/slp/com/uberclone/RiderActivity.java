@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -23,6 +24,11 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -36,12 +42,16 @@ import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.location.places.ui.SupportPlaceAutocompleteFragment;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -52,6 +62,7 @@ import com.slp.com.uberclone.data.RideRequest;
 import com.slp.com.uberclone.utils.FirebaseUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -59,7 +70,7 @@ import butterknife.ButterKnife;
 
 import static android.location.LocationManager.GPS_PROVIDER;
 
-public class RiderActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnSuccessListener<Location>, OnFailureListener {
+public class RiderActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnSuccessListener<Location>, OnFailureListener, RoutingListener {
 
     private static final String TAG = "RiderActivity:";
     private GoogleMap mMap;
@@ -79,7 +90,9 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private static final int LOCATION_SERVICE_REQUEST_CODE = 10;
     private boolean destinationSelected = false;
+    private String destination;
     private boolean gpsEnabled = false;
+    private List<Polyline> polylines;
 
 
     @Override
@@ -95,6 +108,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
                     android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             startActivityForResult(gpsOptionsIntent, LOCATION_SERVICE_REQUEST_CODE);
         }
+        polylines = new ArrayList<>();
 
     }
 
@@ -333,9 +347,18 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
                 if (resultCode == RESULT_OK) {
                     Place place = PlaceAutocomplete.getPlace(this, data);
                     destinationLatLng = place.getLatLng();
-                    destinationTV.setText(place.getName());
+                     destination = (String) place.getName();
+                    destinationTV.setText(destination);
                     destinationSelected = true;
-                    Log.i(TAG, "Place: " + place.getName());
+                    Log.i(TAG, "Place: " + destination);
+
+                    Routing routing = new Routing.Builder()
+                            .travelMode(Routing.TravelMode.DRIVING)
+                            .withListener(RiderActivity.this)
+                            .waypoints(currentLatLng, destinationLatLng)
+                            .build();
+                    routing.execute();
+
                 } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                     Status status = PlaceAutocomplete.getStatus(this, data);
 
@@ -350,8 +373,8 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
             case LOCATION_SERVICE_REQUEST_CODE:
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     setMapAndLocation();
-                } else{
-                    Toast.makeText(this,"Enable GPS",Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Enable GPS", Toast.LENGTH_SHORT).show();
                     finish();
                 }
                 break;
@@ -360,4 +383,59 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
     }
 
 
+    @Override
+    public void onRoutingFailure(RouteException e) {
+
+    }
+
+    @Override
+    public void onRoutingStart() {
+
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int j) {
+        CameraUpdate center = CameraUpdateFactory.newLatLng(currentLatLng);
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(16);
+
+        mMap.moveCamera(center);
+
+
+        if (polylines.size() > 0) {
+            for (Polyline poly : polylines) {
+                poly.remove();
+            }
+        }
+
+        polylines = new ArrayList<>();
+        //add route(s) to the map.
+        for (int i = 0; i < route.size(); i++) {
+
+            PolylineOptions polyOptions = new PolylineOptions();
+            polyOptions.color(getResources().getColor(R.color.colorAccent));
+            polyOptions.width(10 + i * 3);
+            polyOptions.addAll(route.get(i).getPoints());
+            Polyline polyline = mMap.addPolyline(polyOptions);
+            polylines.add(polyline);
+
+            Toast.makeText(getApplicationContext(), "Route " + (i + 1) + ": distance - " + route.get(i).getDistanceValue() + ": duration - " + route.get(i).getDurationValue(), Toast.LENGTH_SHORT).show();
+        }
+
+        // Start marker
+        MarkerOptions options = new MarkerOptions();
+        options.position(currentLatLng);
+        mMap.addMarker(options);
+
+        // End marker
+        options = new MarkerOptions();
+        options.position(destinationLatLng);
+        options.title(destination);
+        mMap.addMarker(options);
+
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+
+    }
 }
