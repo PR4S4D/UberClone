@@ -5,13 +5,14 @@ package com.slp.com.uberclone.data;
  */
 
 public class User {
+
     private String userName;
-    private boolean isDriver;
+    private boolean driver;
     private String emailId;
 
-    public User(String userName, boolean isDriver, String emailId) {
+    public User(String userName, boolean driver, String emailId) {
         this.userName = userName;
-        this.isDriver = isDriver;
+        this.driver = driver;
         this.emailId = emailId;
     }
 
@@ -24,11 +25,11 @@ public class User {
     }
 
     public boolean isDriver() {
-        return isDriver;
+        return driver;
     }
 
     public void setDriver(boolean driver) {
-        isDriver = driver;
+        this.driver = driver;
     }
 
     public String getEmailId() {
@@ -38,4 +39,5 @@ public class User {
     public void setEmailId(String emailId) {
         this.emailId = emailId;
     }
+
 }

@@ -27,13 +27,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.slp.com.uberclone.data.User;
 import com.slp.com.uberclone.utils.FirebaseUtils;
+import com.slp.com.uberclone.utils.PreferenceUtils;
+import com.slp.com.uberclone.utils.UberConstants;
 
 import java.net.Authenticator;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class LoginActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
+public class LoginActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, UberConstants {
 
     private static final int RC_SIGN_IN = 1000;
     private static final String TAG = "LoginActivity: ";
@@ -150,6 +152,14 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         if (null != currentUser) {
             updateUI(currentUser);
+        }
+    }
+
+    public void selectUserType(View view) {
+        if (R.id.radio_driver == view.getId()) {
+            PreferenceUtils.setDriver(this,true);
+        }else{
+            PreferenceUtils.setDriver(this,false);
         }
     }
 }
