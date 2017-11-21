@@ -1,5 +1,7 @@
 package com.slp.com.uberclone.utils;
 
+import android.content.Context;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
@@ -21,8 +23,8 @@ public class FirebaseUtils {
         return getFirebaseUser().getUid();
     }
 
-    public static User getUser() {
+    public static User getUser(Context context) {
         FirebaseUser user = getFirebaseUser();
-        return new User(user.getDisplayName(), false, user.getEmail());
+        return new User(user.getDisplayName(), PreferenceUtils.isDriver(context), user.getEmail());
     }
 }

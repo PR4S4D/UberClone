@@ -178,11 +178,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "409701952097-1gc1j8n4js6bbb34030as5m9e0sg6h3n.apps.googleusercontent.com",
+          "client_id": "409701952097-m6ldhfsp77mn4no2dvk0jdgqmrqhb1ta.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.slp.com.uberclone",
-            "certificate_hash": "3e0124d0861c6cd819f65e47905618bfaf95f93b"
+            "certificate_hash": "94f50db5b28c9b2615949b146ca83524c220feee"
           }
         },
         {

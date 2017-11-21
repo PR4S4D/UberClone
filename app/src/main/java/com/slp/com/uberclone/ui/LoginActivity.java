@@ -1,4 +1,4 @@
-package com.slp.com.uberclone;
+package com.slp.com.uberclone.ui;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -15,22 +15,17 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.slp.com.uberclone.data.User;
+import com.slp.com.uberclone.R;
 import com.slp.com.uberclone.utils.FirebaseUtils;
 import com.slp.com.uberclone.utils.PreferenceUtils;
 import com.slp.com.uberclone.utils.UberConstants;
-
-import java.net.Authenticator;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -126,7 +121,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     private void createUser() {
         userDatabaseReference = firebaseDatabase.getReference().child(
                 USER);
-        userDatabaseReference.child(user.getUid()).setValue(FirebaseUtils.getUser());
+        userDatabaseReference.child(user.getUid()).setValue(FirebaseUtils.getUser(getApplicationContext()));
     }
 
     private void updateUI(FirebaseUser user) {
@@ -136,7 +131,11 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
             user.updateProfile(profileUpdates);
         }
 
-        startActivity(new Intent(this, RiderActivity.class));
+        if(PreferenceUtils.isDriver(this)){
+            startActivity(new Intent(this, DriverActivity.class));
+        } else {
+            startActivity(new Intent(this, RiderActivity.class));
+        }
 
         Toast.makeText(this, " Welcome " + user.getDisplayName(), Toast.LENGTH_LONG).show();
     }
@@ -157,9 +156,9 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
 
     public void selectUserType(View view) {
         if (R.id.radio_driver == view.getId()) {
-            PreferenceUtils.setDriver(this,true);
-        }else{
-            PreferenceUtils.setDriver(this,false);
+            PreferenceUtils.setDriver(this, true);
+        } else {
+            PreferenceUtils.setDriver(this, false);
         }
     }
 }

@@ -2,10 +2,7 @@ package com.slp.com.uberclone.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.icu.lang.UCharacter;
 import android.preference.PreferenceManager;
-
-import com.slp.com.uberclone.LoginActivity;
 
 /**
  * Created by slaks on 21/11/2017.
