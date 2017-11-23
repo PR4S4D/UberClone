@@ -1,17 +1,13 @@
 package com.slp.com.uberclone.data;
 
-import android.location.Address;
-
-import com.google.android.gms.maps.model.LatLng;
-
 /**
  * Created by Lakshmiprasad on 11/11/2017.
  */
 
 public class RideRequest {
     private User user;
-    private LatLng currentLocation;
-    private LatLng destinationLocation;
+    private UberLatLng currentLocation;
+    private UberLatLng destinationLocation;
 
     public User getUser() {
         return user;
@@ -21,27 +17,27 @@ public class RideRequest {
         this.user = user;
     }
 
-    public LatLng getCurrentLocation() {
+    public UberLatLng getCurrentLocation() {
         return currentLocation;
     }
 
-    public void setCurrentLocation(LatLng currentLocation) {
+    public void setCurrentLocation(UberLatLng currentLocation) {
         this.currentLocation = currentLocation;
     }
 
-    public LatLng getDestinationLocation() {
+    public UberLatLng getDestinationLocation() {
         return destinationLocation;
     }
 
-    public void setDestinationLocation(LatLng destinationLocation) {
+    public void setDestinationLocation(UberLatLng destinationLocation) {
         this.destinationLocation = destinationLocation;
     }
 
-    public RideRequest(){
+    public RideRequest() {
 
     }
 
-    public RideRequest(User user, LatLng currentLocation, LatLng destinationLocation) {
+    public RideRequest(User user, UberLatLng currentLocation, UberLatLng destinationLocation) {
         this.user = user;
         this.currentLocation = currentLocation;
         this.destinationLocation = destinationLocation;

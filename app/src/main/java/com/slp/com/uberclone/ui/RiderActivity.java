@@ -53,6 +53,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.slp.com.uberclone.R;
 import com.slp.com.uberclone.data.RideRequest;
+import com.slp.com.uberclone.data.UberLatLng;
 import com.slp.com.uberclone.utils.FirebaseUtils;
 
 import java.io.IOException;
@@ -273,7 +274,7 @@ public class RiderActivity extends FragmentActivity implements OnMapReadyCallbac
                 return;
             }
             Log.i(TAG, "bookRide: " + destinationLatLng);
-            RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(this), currentLatLng, destinationLatLng);
+            RideRequest rideRequest = new RideRequest(FirebaseUtils.getUser(this), new UberLatLng(currentLatLng), new UberLatLng(destinationLatLng));
             Snackbar.make(view, "Searching for nearest Uber!", Snackbar.LENGTH_SHORT).show();
             databaseReference.child(FirebaseUtils.getUserUid()).setValue(rideRequest);
             rideBooked = true;

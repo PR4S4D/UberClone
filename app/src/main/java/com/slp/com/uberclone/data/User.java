@@ -10,6 +10,9 @@ public class User {
     private boolean driver;
     private String emailId;
 
+    public User() {
+    }
+
     public User(String userName, boolean driver, String emailId) {
         this.userName = userName;
         this.driver = driver;
