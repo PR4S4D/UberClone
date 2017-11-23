@@ -37,6 +37,10 @@ public class RideRequest {
         this.destinationLocation = destinationLocation;
     }
 
+    public RideRequest(){
+
+    }
+
     public RideRequest(User user, LatLng currentLocation, LatLng destinationLocation) {
         this.user = user;
         this.currentLocation = currentLocation;
